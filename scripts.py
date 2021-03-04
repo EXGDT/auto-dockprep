@@ -1,0 +1,46 @@
+import os
+import chimera
+import DockPrep
+from DockPrep import prep
+from WriteDMS import writeDMS
+from WriteMol2 import writeMol2
+from chimera import runCommand as rc
+#os.chdir("/Users/yxguo/Documents/Project/dock/Tutorial")
+os.chdir("/media/psf/Home/Documents/Project/dock/Tutorial")
+rc("open 1ABE.pdb")
+rc("select :/isHet")
+rc("delete sel")
+rc("addh useHisName false")
+rc("addcharge")
+models = chimera.openModels.list(modelTypes=[chimera.Molecule])
+prep(models)
+writeMol2(models, "rec_charged.mol2")
+rc("select H")
+rc("delete sel")
+rc("write format pdb 0 rec_NoH.pdb")
+rc("close session")
+rc("open 1ABE.pdb")
+rc("select ligand")
+rc("select invert ligand")
+rc("delete sel")
+rc("select :ARB")
+rc("delete sel")
+rc("addh useHisName false")
+rc("addcharge")
+models = chimera.openModels.list(modelTypes=[chimera.Molecule])
+writeMol2(models, "lig_charged.mol2")
+rc("close session")
+rc("open rec_NoH.pdb")
+rc("surface")
+surf = chimera.openModels.list(modelTypes=[chimera.MSMSModel])[0]
+writeDMS(surf, "rec.dms")
+rc("close session")
+os.system("rm *tmp*")
+os.system("rm *OUTSPH*")
+os.system("rm rec.sph")
+os.system("../dock6/bin/sphgen")
+os.system("rm selected_spheres.sph")
+os.system("../dock6/bin/sphere_selector rec.sph lig_charged.mol2 10.0")
+os.system("rm rec_box.pdb")
+os.system("../dock6/bin/showbox < box.in")
+os.system("../dock6/bin/grid -i grid.in")
